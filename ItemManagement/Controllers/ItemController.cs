@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ItemManagement.Models;
 using ItemManagement.ViewModels;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,8 +13,18 @@ namespace ItemManagement.Controllers
 {
     public class ItemController : Controller
     {
+        #region Variables
+
         private readonly AppDbContext _db;
         private readonly IWebHostEnvironment webHostEnv;
+
+        [BindProperty]
+        public Item Item { get; set; }
+
+        [BindProperty]
+        public ItemViewModel ItemViewModel { get; set; }
+
+        #endregion Variables
 
         public ItemController(AppDbContext db, IWebHostEnvironment hostEnv)
         {
@@ -36,28 +48,21 @@ namespace ItemManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(ItemViewModel model)
         {
-            if (ModelState.IsValid)
+            Item = new Item
             {
-                Item item = new Item
-                {
-                    Name = model.Name,
-                    Price = model.Price,
-                    Icon = UploadedFile(model),
-                    Description = model.Description
-                };
+                Name = model.Name,
+                Price = model.Price,
+                Icon = UploadFile(model),
+                Description = model.Description
+            };
 
-                _db.Add(item);
-                await _db.SaveChangesAsync();
+            _db.Add(Item);
+            await _db.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View();
+            return RedirectToAction(nameof(Index));
         }
 
-
-
-        private string UploadedFile(ItemViewModel model)
+        private string UploadFile(ItemViewModel model)
         {
             string fileName = null;
 
@@ -66,64 +71,93 @@ namespace ItemManagement.Controllers
                 string uploadFolder = Path.Combine(webHostEnv.WebRootPath, "images");
                 fileName = $"{Guid.NewGuid()}_{model.Icon.FileName}";
                 string filePath = Path.Combine(uploadFolder, fileName);
-                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    model.Icon.CopyTo(fileStream);
-                }
+                using FileStream fileStream = new FileStream(filePath, FileMode.Create);
+                model.Icon.CopyTo(fileStream);
             }
             return fileName;
         }
 
         #endregion Add Item
 
+        #region Edit Item
 
-        //public IActionResult Upsert(int? id)
-        //{
-        //    Item = new Item();
+        public IActionResult Edit(int? id)
+        {
+            Item = _db.Items.FirstOrDefault(u => u.Id == id);
 
-        //    if (id == null)
-        //    {
-        //        ItemViewModel ivm = new ItemViewModel();
-        //        //create
-        //        return View(Item);
-        //        //return View(ivm);
-        //    }
+            if (Item == null)
+            {
+                return NotFound();
+            }
 
-        //    //update
+            ItemViewModel = new ItemViewModel()
+            {
+                Id = Item.Id,
+                Name = Item.Name,
+                Description = Item.Description,
+                Icon = ReturnFormFile(Item.Icon)
+            };
 
-        //    Item = _db.Items.FirstOrDefault(u => u.Id == id);
+            return View(ItemViewModel);
+        }
 
-        //    if (Item == null)
-        //    {
-        //        return NotFound();
-        //    }
+        public IFormFile ReturnFormFile(string fileName)
+        {
+            string filePath = $"wwwroot/images/{fileName}";
 
-        //    return View(Item);
-        //}
+            FileStream fs = null;
+            FileStreamResult fsr;
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public IActionResult Upsert()
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        if (Item.Id == 0)
-        //        {
-        //            //create
-        //            _db.Items.Add(Item);
-        //        }
-        //        else
-        //        {
-        //            _db.Items.Update(Item);
-        //        }
+            var ms = new MemoryStream();
 
-        //        _db.SaveChanges();
+            try
+            {
+                fs = new FileStream(filePath, FileMode.Open);
+                fsr = new FileStreamResult(fs, "image/jpeg");
 
-        //        return RedirectToAction("Index");
-        //    }
-        //    return View(Item);
-        //}
+                fsr.FileStream.CopyTo(ms);
+                return new FormFile(ms, 0, fs.Length, fileName, fsr.FileDownloadName);
+            }
+            catch (Exception)
+            {
+                if (ms != null)
+                    ms.Dispose();
 
+                if (fs != null)
+                    fs.Dispose();
+
+                return null;
+            }
+            finally
+            {
+                if (ms != null)
+                    ms.Dispose();
+
+                if (fs != null)
+                    fs.Dispose();
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(ItemViewModel model)
+        {
+            Item = new Item
+            {
+                Id = model.Id,
+                Name = model.Name,
+                Price = model.Price,
+                Icon = UploadFile(model),
+                Description = model.Description
+            };
+
+            _db.Items.Update(Item);
+            await _db.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        #endregion Edit Item
 
         [HttpGet]
         public async Task<IActionResult> GetAll()

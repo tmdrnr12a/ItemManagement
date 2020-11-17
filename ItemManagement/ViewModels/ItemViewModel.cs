@@ -5,6 +5,8 @@ namespace ItemManagement.ViewModels
 {
     public class ItemViewModel
     {
+        public int Id { get; set; }
+
         [Required(ErrorMessage = "아이템의 이름을 등록해주세요.")]
         [Display(Name = "Name")]
         public string Name { get; set; }

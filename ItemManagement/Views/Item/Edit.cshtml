@@ -1,14 +1,15 @@
 ﻿@model ItemManagement.ViewModels.ItemViewModel
 
-@{ ViewData["Title"] = "Add Item"; }
+@{ ViewData["Title"] = "Edit Item"; }
 
 <div class="col-md-10 mx-auto py-4">
     <div class="card">
         <div class="card-header bg-primary text-uppercase text-white">
-            <h4>Add Item </h4>
+            <h4>Edit Item</h4>
         </div>
         <div class="card-body">
-            <form enctype="multipart/form-data" asp-action="Add">
+            <form enctype="multipart/form-data" asp-action="Edit">
+                <input type="hidden" asp-for="Id" />
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -45,7 +46,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <input type="submit" value="Add" class="btn btn-sm btn-primary rounded-0 text-uppercase" />
+                    <input type="submit" value="Edit" class="btn btn-sm btn-primary rounded-0 text-uppercase" />
                     <a asp-action="Index" class="btn btn-sm btn-primary rounded-0 text-uppercase"><i class="fas fa-fast-backward"></i> Back to List</a>
                 </div>
             </form>
@@ -56,10 +57,8 @@
 @section scripts{
     <partial name="_ValidationScriptsPartial" />
 
-    <script type="text/javascript">
-        $(".custom-file-input").on("change", function () {
+    <script type="text/javascript">$(".custom-file-input").on("change", function () {
             var fileName = $(this).val().split("\\").pop();
             $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
-        });
-    </script>
+        });</script>
 }
