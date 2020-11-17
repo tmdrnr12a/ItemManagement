@@ -14,26 +14,30 @@ function loadDataTable() {
         "columns": [
             {
                 "data": "icon",
-                "width": "10%",
+                "width": "5%",
+                "className": "dt-center",
                 "render": function (data) {
                     return `<img src="/images/${data}"/>`;
                 }
             },
             {
                 "data": "name",
-                "width": "15%"
+                "width": "15%",
+                "className": "dt-center"
             },
             {
                 "data": "price",
-                "width": "15%"
+                "width": "5%",
+                "className": "dt-center"
             },
             {
                 "data": "description",
-                "width": "40%"
+                "width": "50%"
             },
             {
                 "data": "id",
                 "width": "10%",
+                "className": "dt-center",
                 "render": function (data) {
                     return `<div class="text-center">
                         <a href="/item/Edit?id=${data}" class='btn btn-success text-white' style='cursor:pointer; width:70px;'>
@@ -45,6 +49,7 @@ function loadDataTable() {
             {
                 "data": "id",
                 "width": "10%",
+                "className": "dt-center",
                 "render": function (data) {
                     return `<div class="text-center">
                         <a class='btn btn-danger text-white' style='cursor:pointer; width:70px;'
