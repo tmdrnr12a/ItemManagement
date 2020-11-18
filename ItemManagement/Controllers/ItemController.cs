@@ -94,6 +94,7 @@ namespace ItemManagement.Controllers
             {
                 Id = Item.Id,
                 Name = Item.Name,
+                Price = Item.Price,
                 Description = Item.Description,
                 Icon = ReturnFormFile(Item.Icon)
             };
